@@ -1,24 +1,40 @@
 **FREE
 DCL-S list CHAR(13) DIM(*CTDATA);
 
-DCL-S list1 INT(10) DIM(1000);
-DCL-S list2 INT(10) DIM(1000);
+DCL-S diff    PACKED(5);
+DCL-S i       PACKED(5);
+DCL-S list1   PACKED(5) DIM(2000);
+DCL-S list2   PACKED(5) DIM(2000);
+DCL-S size    PACKED(5);
+DCL-S totdiff PACKED(10);
 
-DCL-S i INT(10);
 
-FOR i = 1 TO %ELEM(list);
-    List1(i) = %INT(%SUBST(list(1):1:5));
-    List2(i) = %INT(%SUBST(list(1):9:5));
+size = %ELEM(list);
+
+FOR i = 1 TO size;
+    list1(i) = %INT(%SUBST(list(i):1:5));
+    list2(i) = %INT(%SUBST(list(i):9:5));
 ENDFOR;
 
-SORTA List1;
-SORTA List2;
+SORTA %SUBARR(list1:1:size);
+SORTA %SUBARR(list2:1:size);
+
+FOR i = 1 TO size;
+    IF list1(i) > list2(i);
+        diff = (list1(i)-list2(i));
+    ELSE;
+        diff = (list2(i)-list1(i));
+    ENDIF;
+    totdiff += diff;
+ENDFOR;
+
+DSPLY %CHAR(totdiff);
 
 
 *INLR = *ON;
 RETURN;
 
-** list
+**CTDATA list
 61087   87490
 31697   16584
 57649   82503
