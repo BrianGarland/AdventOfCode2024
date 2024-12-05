@@ -1,12 +1,14 @@
 **FREE
 DCL-S list CHAR(13) DIM(*CTDATA);
 
-DCL-S diff    PACKED(5);
-DCL-S i       PACKED(5);
-DCL-S list1   PACKED(5) DIM(2000);
-DCL-S list2   PACKED(5) DIM(2000);
-DCL-S size    PACKED(5);
-DCL-S totdiff PACKED(10);
+DCL-S found    PACKED(5);
+DCL-S i        PACKED(5);
+DCL-S list1    PACKED(5) DIM(2000);
+DCL-S list2    PACKED(5) DIM(2000);
+DCL-S pos      PACKED(5);
+DCL-S size     PACKED(5);
+DCL-S start    PACKED(5);
+DCL-S totfound PACKED(10);
 
 
 size = %ELEM(list);
@@ -20,15 +22,22 @@ SORTA %SUBARR(list1:1:size);
 SORTA %SUBARR(list2:1:size);
 
 FOR i = 1 TO size;
-    IF list1(i) > list2(i);
-        diff = (list1(i)-list2(i));
-    ELSE;
-        diff = (list2(i)-list1(i));
-    ENDIF;
-    totdiff += diff;
+
+    found = 0;
+    start = 1;
+    DOU pos = 0;
+        pos = %LOOKUP(list1(i):List2:start);
+        IF pos >= start;
+            found += 1;
+        ENDIF;
+        start = pos + 1;
+    ENDDO;
+
+    totfound = totfound + (list1(i) * found);
+
 ENDFOR;
 
-DSPLY %CHAR(totdiff);
+DSPLY %CHAR(totfound);
 
 
 *INLR = *ON;
