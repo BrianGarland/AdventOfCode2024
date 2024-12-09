@@ -1,11 +1,16 @@
 **FREE
 
-CTL-OPT MAIN('main');
+CTL-OPT MAIN(Main) DFTACTGRP(*NO) ACTGRP(*NEW);
 
-/INCLUDE './ifs_io.rpgle'
+/INCLUDE './builds/AdventOfCode2024/ifs_io.rpgle'
+
+DCL-PR Main EXTPGM('DAY3A');
+    pfilename CHAR(32);
+END-PR;
 
 
-DCL-PROC main;
+
+DCL-PROC Main;
     DCL-PI *N;
         pfilename CHAR(32);
     END-PI;
@@ -14,23 +19,31 @@ DCL-PROC main;
     DCL-S buffer    CHAR(2048);
     DCL-S bufferlen INT(10);
     DCL-S filename  VARCHAR(100);
+    DCL-S lastfound INT(10);
     DCL-S options   VARCHAR(100);
+    DCL-S stream    LIKE(pfile);
+    DCL-S success   POINTER;
+    DCL-S tail      CHAR(1024);
 
 
-    filename = './' + %TRIM(pfilename);
+    filename = './builds/AdventOfCode2024/day3/' + %TRIM(pfilename);
     options = 'r, crln=N';
     stream = fopen(filename:options);
     CLEAR buffer;
     success = fgets(%ADDR(buffer):%SIZE(buffer):stream);
-    DOW succes <> *NULL;
+    DOW success <> *NULL;
         bufferlen = %LEN(%TRIMR(buffer));
 
-        answer += compute(buffer);
+        answer += Compute(buffer:bufferlen:lastfound);
+        IF lastfound <> 0;
+            tail = %SUBST(buffer:lastfound+1);
+        ELSE;
+            tail = %SUBST(buffer:bufferlen-20);
+        ENDIF;
 
-        tail = %SUBST(buffer:bufferlen-20);
         CLEAR buffer;
         success = fgets(%ADDR(buffer):%SIZE(buffer):stream);
-        buffer = %TRIM(tail) + buffer;
+        buffer = %TRIMR(tail) + buffer;
     ENDDO;
 
     fclose(stream);
@@ -42,15 +55,15 @@ DCL-PROC main;
 END-PROC;
 
 
-DCL-PROC compute;
+
+DCL-PROC Compute;
     DCL-PI *N INT(20);
         buffer    CHAR(2048);
         bufferlen INT(10);
+        lastfound INT(10);
     END-PI;
 
     DCL-C valid '0123456789,';
-
-    DCL-S list CHAR(100) DIM(*CTDATA);
 
     DCL-S answer PACKED(15);
     DCL-S end    PACKED(5);
@@ -59,18 +72,20 @@ DCL-PROC compute;
     DCL-S pos1   PACKED(5);
     DCL-S pos2   PACKED(5);
     DCL-S start  PACKED(5);
-    DCL-S string CHAR(200);
 
 
+    lastfound = 0;
     start = 1;
 
-    DOW start < %LEN(string);
+    DOW start < bufferlen;
 
-        pos1 = %SCAN('mul(':string:start);
+        pos1 = %SCAN('mul(':buffer:start);
         IF pos1 = 0;
             LEAVE;
         ENDIF;
-        pos2 = %SCAN(')':string:pos1+4);
+        lastfound = pos1;
+
+        pos2 = %SCAN(')':buffer:pos1+4);
         IF pos2 = 0;
             // no ending paren
             LEAVE;
@@ -86,7 +101,9 @@ DCL-PROC compute;
 
         start = pos1 + 4;
         EVAL end = pos2 - 1;
-        parmx = %SUBST(string:start:end-start+1);
+        parmx = %SUBST(buffer:start:end-start+1);
+
+        DSPLY parmx;
 
         IF %CHECK(valid:%TRIM(parmx)) > 0;
             // invalid characters
@@ -105,7 +122,6 @@ DCL-PROC compute;
         start = pos2;
 
     ENDDO;
-
 
     RETURN answer;
 

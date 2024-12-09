@@ -39,7 +39,7 @@ DCL-PR fflush UNS(10) EXTPROC('_C_IFS_fflush');
     stream LIKE(pfile) VALUE;
 END-PR;
 
-DCL-PR fclose INT(10) EXTPROC('_C_IFS_fcloseE');
+DCL-PR fclose INT(10) EXTPROC('_C_IFS_fclose');
     stream LIKE(pfile) VALUE;
 END-PR;
 
