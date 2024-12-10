@@ -1,0 +1,3 @@
+**FREE
+DCL-C FALSE '0';
+DCL-C TRUE '1';

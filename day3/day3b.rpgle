@@ -3,6 +3,7 @@
 CTL-OPT MAIN(Main) DFTACTGRP(*NO) ACTGRP(*NEW);
 
 /INCLUDE './builds/AdventOfCode2024/ifs_io.rpgle'
+/INCLUDE './builds/AdventOfCode2024/my_stuff.rpgle'
 
 DCL-PR Main EXTPGM('DAY3A');
     pfilename CHAR(32);
@@ -57,14 +58,19 @@ DCL-PROC Compute;
 
     DCL-C valid '0123456789,';
 
-    DCL-S answer PACKED(15);
-    DCL-S end    PACKED(5);
-    DCL-S parms  CHAR(5) DIM(*AUTO:5);
-    DCL-S parmx  CHAR(7);
-    DCL-S pos1   PACKED(5);
-    DCL-S pos2   PACKED(5);
-    DCL-S q      INT(20) STATIC;
-    DCL-S start  PACKED(5);
+    DCL-S a       PACKED(5);
+    DCL-S active  IND INZ(TRUE);
+    DCL-S answer  PACKED(15);
+    DCL-S b       PACKED(5);
+    DCL-S dopos   PACKED(5);
+    DCL-S dontpos PACKED(5);
+    DCL-S end     PACKED(5);
+    DCL-S parms   CHAR(5) DIM(*AUTO:5);
+    DCL-S parmx   CHAR(7);
+    DCL-S pos1    PACKED(5);
+    DCL-S pos2    PACKED(5);
+    DCL-S q       PACKED(5) STATIC;
+    DCL-S start   PACKED(5);
 
 
     start = 1;
@@ -75,6 +81,20 @@ DCL-PROC Compute;
         IF pos1 = 0;
             LEAVE;
         ENDIF;
+
+        dopos = %SCAN('do()':buffer:start);
+        dontpos = %SCAN('don''t()':buffer:start);
+
+        SELECT;
+            WHEN dopos = 0 AND dontpos = 0;
+                // do nothing
+            WHEN NOT(active) AND dopos > 0 AND dopos < pos1
+                AND (dopos > dontpos OR dontpos > pos1);
+                active = TRUE;
+            WHEN active AND dontpos > 0 AND dontpos < pos1
+                AND (dontpos > dopos OR dopos > pos1);
+                active = FALSE;
+        ENDSL;
 
         pos2 = %SCAN(')':buffer:pos1+4);
         IF pos2 = 0;
@@ -116,10 +136,17 @@ DCL-PROC Compute;
             ITER;
         ENDIF;
 
-        q += 1;
-        DSPLY (%CHAR(q) + ' ' + parmx);
+        a = %INT(parms(1));
+        b = %INT(parms(2));
 
-        answer +=  %INT(parms(1)) * %INT(parms(2));
+        q += 1;
+        DSPLY (%EDITC(q:'X') + ' ' + active + ' '
+               + %EDITC(a:'X') + ' ' + %EDITC(b:'X'));
+
+        IF active;
+            answer += (a * b);
+        ENDIF;
+
         start = pos2;
 
     ENDDO;
